@@ -16,6 +16,7 @@ Share -> Add to homepage
 
 
 https://buddhistera.github.io/B.C./
+
 For android
 
 1 Open this web address in Chrome browser
