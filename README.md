@@ -3,15 +3,19 @@ https://buddhistera.github.io/B.C./
 android සඳහා
 
 1 මෙම web ලිපිනය ක්‍රෝම් බ්‍රවුසරයෙන් විවෘත කරන්න
+
 2.bookmark එකක් ලෙස එකතු කරන්න
+
 3.chrome browser එකේ ඉහළ දකුණු පස menu එක  විවෘත කර
   install button click කරන්න 
 
 windows සඳහා
+
 මෙම web ලිපිනය edge හෝ Chrome බ්‍රවුසරයකින් විවෘත කොට බුක් මාක් කරගන්න
 
 iphone, mac os සඳහා
-මෙම web ලිපිනය Safari බ්‍රවුසරයෙන් ඔය විවෘත කොට book mark කරගන්න
+
+මෙම web ලිපිනය Safari බ්‍රවුසරයෙන් විවෘත කොට book mark කරගන්න
 Share -> Add to homepage
 
 
