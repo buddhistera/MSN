@@ -1857,6 +1857,7 @@ function updateDarkModeBtnText() {
         btn.innerText = isDark ? "Light Mode" : "Dark Mode";
     }
 }
+            
 let userLatitude = null;
 let userLongitude = null;
 
@@ -1875,83 +1876,76 @@ function fetchLocationAndSunData() {
     if(btn) btn.disabled = true;
 
     if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-        async (position) => { // async ලෙස වෙනස් කර ඇත
-            userLatitude = position.coords.latitude;
-            userLongitude = position.coords.longitude;
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                userLatitude = position.coords.latitude;
+                userLongitude = position.coords.longitude;
 
-            localStorage.setItem('userLat', userLatitude);
-            localStorage.setItem('userLng', userLongitude);
-            
-            
-            if (isEnglish()) {
-                statusText.innerText = `📍 Locating: ${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°...`;
-            } else {
-                statusText.innerText = `📍 ස්ථානය සොයමින්: ${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°...`;
-            }            
-            try {
-            
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${userLatitude}&lon=${userLongitude}&accept-language=${currentLang}`);
-                const data = await response.json();
-                
-                
-                // fetchLocationAndSunData එක ඇතුළත ස්ථාන නාමය ලැබෙන කොටස මෙසේ වෙනස් කරන්න:
-const locationName = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.road || "Unknown";
-
-if (isEnglish()) {
-    statusText.innerText = `✅ Location: ${locationName}`;
-} else {
-    statusText.innerText = `✅ ස්ථානය: ${locationName}`;
-}
-
-// 💾 ස්ථාන නාමයද මතකයේ සුරැකීම
-localStorage.setItem('userLocName', locationName);
-
-            } catch (error) {
+                localStorage.setItem('userLat', userLatitude);
+                localStorage.setItem('userLng', userLongitude);
                 
                 if (isEnglish()) {
-                    statusText.innerText = `✅ Location: ${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°`;
+                    statusText.innerText = `📍 Locating: ${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°...`;
                 } else {
-                    statusText.innerText = `✅ ස්ථානය: ${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°`;
+                    statusText.innerText = `📍 ස්ථානය සොයමින්: ${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°...`;
+                }            
+                
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${userLatitude}&lon=${userLongitude}&accept-language=${currentLang}`);
+                    const data = await response.json();
+                    
+                    const locationName = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.road || "Unknown";
+
+                    if (isEnglish()) {
+                        statusText.innerText = `✅ Location: ${locationName}`;
+                    } else {
+                        statusText.innerText = `✅ ස්ථානය: ${locationName}`;
+                    }
+
+                    localStorage.setItem('userLocName', locationName);
+                } catch (error) {
+                    if (isEnglish()) {
+                        statusText.innerText = `✅ Location: ${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°`;
+                    } else {
+                        statusText.innerText = `✅ ස්ථානය: ${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°`;
+                    }
+                    localStorage.setItem('userLocName', `${userLatitude.toFixed(4)}°, ${userLongitude.toFixed(4)}°`);
                 }
-            }
 
-            if(btn) btn.disabled = false;
-            updateSunTimes();
-        },
-        (error) => {
-            
-
+                if(btn) btn.disabled = false;
+                updateSunTimes();
+            },
+            (error) => {
                 if(btn) btn.disabled = false;
                 
                 if (isEnglish()) {
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
-                            statusText.innerText = " Permission Denied. Please enable Location Access in your device settings.";
+                            statusText.innerText = "❌ Permission Denied. Please enable Location Access in your device settings.";
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            statusText.innerText = " Device GPS is turned off. Please enable GPS/Location on your device.";
+                            statusText.innerText = "❌ Device GPS is turned off. Please enable GPS/Location on your device.";
                             break;
                         case error.TIMEOUT:
                             statusText.innerText = "⏳ Location request timed out. Please try again.";
                             break;
                         default:
-                            statusText.innerText = " Unable to retrieve location. Please try again.";
+                            statusText.innerText = "❌ Unable to retrieve location. Please try again.";
                             break;
                     }
                 } else {
                     switch(error.code) {
                         case error.PERMISSION_DENIED:
-                            statusText.innerText = "කරුණාකර Device Settings වෙත ගොස් Location Access ලබා දෙන්න.";
+                            statusText.innerText = "❌ අවසර නැත (Permission Denied). කරුණාකර ඔබගේ උපාංගයේ (Device) Settings වෙත ගොස් ලොකේෂන් අවසර ලබා දෙන්න.";
                             break;
                         case error.POSITION_UNAVAILABLE:
-                            statusText.innerText = " ඔබේ දුරකථනයේ GPS (Location) ක්‍රියා විරහිත කර ඇත. කරුණාකර දුරකථනයේ GPS සක්‍රීය කරන්න.";
+                            statusText.innerText = "❌ ඔබේ දුරකථනයේ GPS (Location) ක්‍රියා විරහිත කර ඇත. කරුණාකර දුරකථනයේ GPS සක්‍රීය කරන්න.";
                             break;
                         case error.TIMEOUT:
                             statusText.innerText = "⏳ ස්ථානය සෙවීමේ කාලය ඉක්මවා ගියා (Timeout). කරුණාකර නැවත උත්සාහ කරන්න.";
                             break;
                         default:
-                            statusText.innerText = " ස්ථානය ලබා ගැනීමට නොහැකි විය. නැවත උත්සාහ කරන්න.";
+                            statusText.innerText = "❌ ස්ථානය ලබා ගැනීමට නොහැකි විය. නැවත උත්සාහ කරන්න.";
                             break;
                     }
                 }
@@ -1960,32 +1954,23 @@ localStorage.setItem('userLocName', locationName);
         );
     } else {
         if(btn) btn.disabled = false;
-        statusText.innerText = isEnglish() 
-            ? " Your device does not support GPS features." 
-            : " ඔබගේ උපාංගය GPS පහසුකමට සහාය නොදක්වයි.";
+        statusText.innerText = isEnglish()  
+            ? "❌ Your device does not support GPS features." 
+            : "❌ ඔබගේ උපාංගය GPS පහසුකමට සහාය නොදක්වයි.";
     }
 }
 
-
 function updateSunTimes() {
+    const lat = localStorage.getItem('userLat') || userLatitude;
+    const lng = localStorage.getItem('userLng') || userLongitude;
     const dateInput = document.getElementById('sunDateInput');
-    const statusText = document.getElementById('locationStatus');
-    if (!dateInput || !dateInput.value) return;
 
-    const lat = userLatitude || localStorage.getItem('userLat');
-    const lng = userLongitude || localStorage.getItem('userLng');
-
-    if (!lat || !lng) {
-        if (statusText) {
-            statusText.innerText = isEnglish() 
-                ? "Please click 'Get My Location' button first." 
-                : "කරුණාකර මුලින්ම 'Get My Location' බොත්තම ඔබන්න.";
-        }
+    if (!lat || !lng || !dateInput) {
         return;
     }
 
     const selectedDate = new Date(dateInput.value);
-    const times = SunCalc.getTimes(selectedDate, lat, lng);
+    const times = SunCalc.getTimes(selectedDate, parseFloat(lat), parseFloat(lng));
 
     const sunrise = times.sunrise;
     const solarNoon = times.solarNoon;
@@ -1994,7 +1979,7 @@ function updateSunTimes() {
     const arunodaya = new Date(sunrise.getTime() - (30 * 60000));
 
     const formatTime = (dateObj) => {
-        if(isNaN(dateObj.getTime())) return "--:--";
+        if(!dateObj || isNaN(dateObj.getTime())) return "--:--";
         let hours = dateObj.getHours();
         let minutes = dateObj.getMinutes();
         const ampm = hours >= 12 ? 'PM' : 'AM';
@@ -2020,17 +2005,59 @@ function closeSunModal() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    const statusText = document.getElementById('locationStatus');
     const dateInput = document.getElementById('sunDateInput');
+    const savedLat = localStorage.getItem('userLat');
+    const savedLng = localStorage.getItem('userLng');
+    const savedLocName = localStorage.getItem('userLocName');
 
     if (dateInput) {
         dateInput.value = new Date().toISOString().split('T')[0];
         dateInput.addEventListener('change', updateSunTimes);
     }
 
-    if(localStorage.getItem('userLat')) {
+    if (statusText) {
+        if (savedLat && savedLng) {
+            if (savedLocName) {
+                statusText.innerText = isEnglish() ? `✅ Location: ${savedLocName}` : `✅ ස්ථානය: ${savedLocName}`;
+            } else {
+                statusText.innerText = isEnglish() ? `✅ Location: ${parseFloat(savedLat).toFixed(4)}°, ${parseFloat(savedLng).toFixed(4)}°` : `✅ ස්ථානය: ${parseFloat(savedLat).toFixed(4)}°, ${parseFloat(savedLng).toFixed(4)}°`;
+            }
+        } else {
+            statusText.innerText = isEnglish() ? "ℹ️ Please click 'Get Location' button." : "ℹ️ කරුණාකර 'Get Location' බොත්තම ඔබන්න.";
+        }
+    }
+
+    if(savedLat && savedLng) {
         updateSunTimes();
     }
 });
+
+function toggleLanguage() {
+    currentLang = (currentLang === 'si') ? 'en' : 'si';
+    localStorage.setItem('appLang', currentLang);
+    updateUI();
+    calculateAll();
+    updateSunTimes(); 
+    
+    const statusText = document.getElementById('locationStatus');
+    const savedLat = localStorage.getItem('userLat');
+    const savedLng = localStorage.getItem('userLng');
+    const savedLocName = localStorage.getItem('userLocName');
+    
+    if (statusText) {
+        if (savedLat && savedLng) {
+            if (savedLocName) {
+                statusText.innerText = isEnglish() ? `✅ Location: ${savedLocName}` : `✅ ස්ථානය: ${savedLocName}`;
+            } else {
+                statusText.innerText = isEnglish() ? `✅ Location: ${parseFloat(savedLat).toFixed(4)}°, ${parseFloat(savedLng).toFixed(4)}°` : `✅ ස්ථානය: ${parseFloat(savedLat).toFixed(4)}°, ${parseFloat(savedLng).toFixed(4)}°`;
+            }
+        } else {
+            statusText.innerText = isEnglish() ? "ℹ️ Please click 'Get Location' button." : "ℹ️ කරුණාකර 'Get Location' බොත්තම ඔබන්න.";
+        }
+    }
+}
+
 
 
 
