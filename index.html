@@ -1895,13 +1895,18 @@ function fetchLocationAndSunData() {
                 const data = await response.json();
                 
                 
-                const locationName = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.road || "Unknown";
+                // fetchLocationAndSunData එක ඇතුළත ස්ථාන නාමය ලැබෙන කොටස මෙසේ වෙනස් කරන්න:
+const locationName = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.road || "Unknown";
 
-                if (isEnglish()) {
-                    statusText.innerText = `✅ Location: ${locationName}`;
-                } else {
-                    statusText.innerText = `✅ ස්ථානය: ${locationName}`;
-                }
+if (isEnglish()) {
+    statusText.innerText = `✅ Location: ${locationName}`;
+} else {
+    statusText.innerText = `✅ ස්ථානය: ${locationName}`;
+}
+
+// 💾 ස්ථාන නාමයද මතකයේ සුරැකීම
+localStorage.setItem('userLocName', locationName);
+
             } catch (error) {
                 
                 if (isEnglish()) {
