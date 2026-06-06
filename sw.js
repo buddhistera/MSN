@@ -3,7 +3,8 @@ const cacheName = 'v11'; // අනිවාර්යයෙන්ම කලින
 const cacheAssets = [
   'index.html',
   'manifest.json',
-  'icon-192.png',
+  'suncalc.js',
+  'icon-192×192.png',
   './'
 ];
 
