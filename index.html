@@ -1896,14 +1896,12 @@ function fetchLocationAndSunData() {
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${userLatitude}&lon=${userLongitude}&accept-language=${currentLang}`);
                 const data = await response.json();
                 
-                
-                
 const locationName = data.address.city || data.address.town || data.address.suburb || data.address.village || data.address.road || "Unknown";
 
 if (isEnglish()) {
-    statusText.innerText = ` Location: ${locationName}`;
+    statusText.innerText = `✅ Location: ${locationName}`;
 } else {
-    statusText.innerText = ` ස්ථානය: ${locationName}`;
+    statusText.innerText = `✅ ස්ථානය: ${locationName}`;
 }
 
 localStorage.setItem('userLocName', locationName);
@@ -2031,6 +2029,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if(localStorage.getItem('userLat')) {
         updateSunTimes();
     }
+	// ඇප් එක ආරම්භයේදී ක්‍රියාත්මක විය යුතු කොටස:
+
+    const statusText = document.getElementById('locationStatus');
+    const savedLat = localStorage.getItem('userLat');
+    const savedLng = localStorage.getItem('userLng');
+    const savedLocName = localStorage.getItem('userLocName');
+
+    if (savedLat && savedLng) {
+        // 1. දැනටමත් ස්ථානය සේව් කර ඇත්නම්, නැවත පැමිණීමේදී ස්ථාන නාමය පෙන්වයි
+        if (savedLocName) {
+            statusText.innerText = (currentLang === 'en') ? `✅ Location: ${savedLocName}` : `✅ ස්ථානය: ${savedLocName}`;
+        } else {
+            // නමක් සේව් වී නැතිනම් පමණක් ඛණ්ඩාංක පෙන්වයි
+            statusText.innerText = (currentLang === 'en') ? `✅ Location: ${parseFloat(savedLat).toFixed(4)}°, ${parseFloat(savedLng).toFixed(4)}°` : `✅ ස්ථානය: ${parseFloat(savedLat).toFixed(4)}°, ${parseFloat(savedLng).toFixed(4)}°`;
+        }
+    } else {
+        // 2. කිසිදු ස්ථානයක් සේව් වී නොමැති මුල්ම අවස්ථාව නම් මෙම පණිවිඩය පෙන්වයි
+        statusText.innerText = (currentLang === 'en') ? "ℹ️ Please click 'Get Location' button." : "ℹ️ කරුණාකර 'Get Location' බොත්තම ඔබන්න.";
+    }
+    
+    
 });
                             
 
