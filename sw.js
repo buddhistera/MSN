@@ -1,34 +1,34 @@
-const cacheName = 'v13';// 👈 අපි Version එක 12 දක්වා වැඩි කළා (Cache එක අලුත් වීමට)
+const CACHE_NAME = 'buddhist-era-v14';
 
-// Offline වැඩ කිරීමට අවශ්‍ය ප්‍රධාන ගොනු ලැයිස්තුව
-const cacheAssets = [
+const CACHE_ASSETS = [
   './',
-  'index.html',
-  'manifest.json',
-  'suncalc.js',
-  'icon-192×192.png'
+  './index.html',
+  './manifest.json',
+  './suncalc.js',
+  './script.js',
+  './icon-192x192.png',
+  './icon-512x512.png',
+  './flag.svg'
 ];
 
-// Install Event - ඇප් එක මුලින්ම Install වන විට ගොනු Cache කිරීම
-self.addEventListener('install', (e) => {
+// INSTALL
+self.addEventListener('install', (event) => {
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(cacheName).then((cache) => {
-      console.log('PWA: Caching Files for Offline Use...');
-      return cache.addAll(cacheAssets);
-    })
+
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(CACHE_ASSETS))
   );
 });
 
-// Activate Event - පැරණි Cache ගොනු ඉවත් කර පිරිසිදු කිරීම
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((cacheNames) => {
+// ACTIVATE
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
       return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== cacheName) {
-            console.log('PWA: Clearing Old Cache...', cache);
-            return caches.delete(cache);
+        keys.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
           }
         })
       );
@@ -36,45 +36,55 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Fetch Event - 100% Offline සහ වේගවත් Refresh සඳහා නිවැරදිම තනි කේතය (Cache First Strategy)
+// FETCH
 self.addEventListener('fetch', (event) => {
-  // බාහිර ලොකේෂන් API Request (Nominatim) Cache කිරීම මඟ හැරීම
-  if (event.request.url.includes('nominatim.openstreetmap.org')) {
-    return; 
+
+  // Google Analytics requests ignore
+  if (
+    event.request.url.includes('googletagmanager.com') ||
+    event.request.url.includes('google-analytics.com')
+  ) {
+    return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      // 1. ගොනුව දැනටමත් Cache එකේ තිබේ නම්, Online/Offline භේදයකින් තොරව එය වහාම ලබා දෙයි
-      if (cachedResponse) {
-        // පසුබිමෙන් අලුත් දත්ත තිබේදැයි පරීක්ෂා කර Cache එක Update කර තැබීම (Stale-While-Revalidate)
-        fetch(event.request).then((networkResponse) => {
-          if (event.request.method === 'GET' && networkResponse.status === 200) {
-            caches.open(cacheName).then((cache) => {
-              cache.put(event.request, networkResponse.clone());
-            });
-          }
-        }).catch(() => { /* Offline විට පසුබිම් Error මඟ හරියි */ });
 
-        return cachedResponse;
-      }
+    caches.match(event.request)
+      .then((cachedResponse) => {
 
-      // 2. ගොනුව Cache එකේ නැතිනම් පමණක් අන්තර්ජාලයෙන් ලබා ගනී
-      return fetch(event.request).then((networkResponse) => {
-        // ලැබෙන අලුත් ගොනු (උදා: පින්තූර/වෙනත් පිටු) ස්වයංක්‍රීයව Cache එකට එකතු කරයි
-        if (event.request.method === 'GET' && networkResponse.status === 200) {
-          return caches.open(cacheName).then((cache) => {
-            cache.put(event.request, networkResponse.clone());
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return fetch(event.request)
+          .then((networkResponse) => {
+
+            if (
+              event.request.method === 'GET' &&
+              networkResponse.status === 200
+            ) {
+
+              const responseClone = networkResponse.clone();
+
+              caches.open(CACHE_NAME)
+                .then((cache) => {
+                  cache.put(event.request, responseClone);
+                });
+            }
+
             return networkResponse;
+
+          })
+          .catch(() => {
+
+            if (event.request.mode === 'navigate') {
+              return caches.match('./index.html');
+            }
+
           });
-        }
-        return networkResponse;
-      }).catch(() => {
-        // සම්පූර්ණයෙන්ම Offline වී, සොයන ගොනුවත් නැතිනම් index.html වෙත යොමු කරයි
-        if (event.request.mode === 'navigate') {
-          return caches.match('index.html');
-        }
-      });
-    })
+
+      })
+
   );
+
 });
