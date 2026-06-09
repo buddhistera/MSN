@@ -2,14 +2,28 @@
 <html lang="en">
 <head>
 	<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-ECEGZ86GGK"></script>
 <script src="./suncalc.js"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+if (navigator.onLine) {
 
+  const gaScript = document.createElement('script');
+  gaScript.async = true;
+  gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-ECEGZ86GGK';
+
+  document.head.appendChild(gaScript);
+
+  window.dataLayer = window.dataLayer || [];
+
+  function gtag(){
+    dataLayer.push(arguments);
+  }
+
+  window.gtag = gtag;
+
+  gtag('js', new Date());
   gtag('config', 'G-ECEGZ86GGK');
+
+}
 </script>
     <meta charset="UTF-8">
 	<link rel="apple-touch-icon" href="./icon-192x192.png">
