@@ -2163,42 +2163,42 @@ window.onclick = function(e) {
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-
   window.addEventListener('load', () => {
-
     navigator.serviceWorker.register('./sw.js')
-
       .then(reg => {
-
         console.log('Service Worker Registered');
 
+        // පසුබිමෙන් අලුත් අප්ඩේට් එකක් බාගත වන විට එය හඳුනා ගැනීම
         reg.onupdatefound = () => {
-
           const newWorker = reg.installing;
-
-          newWorker.onstatechange = () => {
-
-            if (
-              newWorker.state === 'installed' &&
-              navigator.serviceWorker.controller
-            ) {
-
-              // page auto refresh
-              window.location.reload();
-
-            }
-          };
+          if (newWorker) {
+            newWorker.onstatechange = () => {
+              // අලුත් කේතයන් බාගත වී (installed) අවසන් වූ විට සහ දැනටමත් පැරණි පිටුවක් ක්‍රියාත්මක වෙමින් පවතී නම්
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                console.log('New update available! Reloading...');
+                window.location.reload();
+              }
+            };
+          }
         };
       })
-
       .catch(err => {
         console.log('SW Error:', err);
       });
-
   });
 
+  // 🔄 🚨 වඩාත්ම වැදගත් කොටස: 
+  // නව සර්විස් වර්කර් එක (sw.js) සම්පූර්ණයෙන්ම පාලනය අතට ගත් (Activate වූ) සැණින් පිටුව ක්ෂණිකව Refresh කිරීම
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
 }
 </script>
+
 
 </body>
 </html>
