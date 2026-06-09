@@ -1,14 +1,12 @@
-const CACHE_NAME = 'buddhist-era-v16';
+const CACHE_NAME = 'buddhist-era-v17';
 
 const CACHE_ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './suncalc.js',
-  './script.js',
   './icon-192x192.png',
-  './icon-512x512.png',
-  './flag.svg'
+    
 ];
 
 // INSTALL
