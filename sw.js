@@ -1,88 +1,87 @@
-const CACHE_NAME = 'buddhist-era-v17.3';
+const CACHE_NAME = "buddhist-era-v17.3.2";
 
-const CACHE_ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-  './suncalc.js',
-  './astronomy.browser.min.js',
-  './icon-192x192.png',
-    
+// Offline සඳහා අත්‍යවශ්‍ය ගොනු පමණක්
+const PRECACHE_FILES = [
+  "./",
+  "./index.html",
+  "./manifest.json",
+  "./suncalc.js",
+  "./icon-192x192.png",  
 ];
 
-// INSTALL
-self.addEventListener('install', (event) => {
+// Install
+self.addEventListener("install", event => {
+
   self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(CACHE_ASSETS))
+      .then(cache => cache.addAll(PRECACHE_FILES))
   );
 });
 
-// ACTIVATE
-self.addEventListener('activate', (event) => {
+// Activate
+self.addEventListener("activate", event => {
+
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
+    (async () => {
+
+      const keys = await caches.keys();
+
+      await Promise.all(
+        keys
+          .filter(key => key !== CACHE_NAME)
+          .map(key => caches.delete(key))
       );
-    }).then(() => self.clients.claim())
+
+      await self.clients.claim();
+
+    })()
   );
 });
 
-// FETCH
-self.addEventListener('fetch', (event) => {
+// Stale While Revalidate
+self.addEventListener("fetch", event => {
 
-  // Google Analytics requests ignore
-  if (
-    event.request.url.includes('googletagmanager.com') ||
-    event.request.url.includes('google-analytics.com')
-  ) {
-    return;
-  }
+  if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+
+  // External requests cache නොකරන්න
+  if (url.origin !== location.origin) return;
 
   event.respondWith(
 
-    caches.match(event.request)
-      .then((cachedResponse) => {
+    (async () => {
 
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+      const cache = await caches.open(CACHE_NAME);
 
-        return fetch(event.request)
-          .then((networkResponse) => {
+      const cachedResponse =
+        await cache.match(event.request);
+
+      const networkFetch =
+        fetch(event.request)
+          .then(response => {
 
             if (
-              event.request.method === 'GET' &&
-              networkResponse.status === 200
+              response &&
+              response.status === 200
             ) {
 
-              const responseClone = networkResponse.clone();
-
-              caches.open(CACHE_NAME)
-                .then((cache) => {
-                  cache.put(event.request, responseClone);
-                });
+              cache.put(
+                event.request,
+                response.clone()
+              );
             }
 
-            return networkResponse;
+            return response;
 
           })
-          .catch(() => {
+          .catch(() => cachedResponse);
 
-            if (event.request.mode === 'navigate') {
-              return caches.match('./index.html');
-            }
+      return cachedResponse || networkFetch;
 
-          });
-
-      })
+    })()
 
   );
 
