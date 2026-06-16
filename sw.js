@@ -1,4 +1,4 @@
-const CACHE_NAME = ' buddhist-era-v17.1.4';
+const CACHE_NAME = ' buddhist-era-v17.1.5';
 
 const PRECACHE_FILES = [
   './',
@@ -6,7 +6,7 @@ const PRECACHE_FILES = [
   './manifest.json',
   './astronomy.browser.min.js',
   './icon-192x192.png',
-  './style.css'
+  './style.css',
   './script.js'
 ];
 
