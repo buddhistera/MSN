@@ -5,7 +5,7 @@ const PRECACHE_FILES = [
   "./",
   "./index.html",
   "./manifest.json",
-  "./suncalc.js",
+  "./astronomy.browser.min.js",
   "./icon-192x192.png",  
 ];
 
