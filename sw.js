@@ -1,17 +1,17 @@
-const CACHE_NAME = "buddhist-era-v17.3.2";
+const CACHE_NAME = ' buddhist-era-v17.1.4';
 
-// Offline සඳහා අත්‍යවශ්‍ය ගොනු පමණක්
 const PRECACHE_FILES = [
-  "./",
-  "./index.html",
-  "./manifest.json",
-  "./astronomy.browser.min.js",
-  "./icon-192x192.png",  
+  './',
+  './index.html',
+  './manifest.json',
+  './astronomy.browser.min.js',
+  './icon-192x192.png',
+  './style.css'
+  './script.js'
 ];
 
 // Install
-self.addEventListener("install", event => {
-
+self.addEventListener('install', event => {
   self.skipWaiting();
 
   event.waitUntil(
@@ -21,68 +21,50 @@ self.addEventListener("install", event => {
 });
 
 // Activate
-self.addEventListener("activate", event => {
+self.addEventListener('activate', event => {
 
   event.waitUntil(
-    (async () => {
-
-      const keys = await caches.keys();
-
-      await Promise.all(
+    caches.keys().then(keys =>
+      Promise.all(
         keys
           .filter(key => key !== CACHE_NAME)
           .map(key => caches.delete(key))
-      );
-
-      await self.clients.claim();
-
-    })()
+      )
+    )
   );
+
+  self.clients.claim();
 });
 
-// Stale While Revalidate
-self.addEventListener("fetch", event => {
+// Fetch
+self.addEventListener('fetch', event => {
 
-  if (event.request.method !== "GET") return;
-
-  const url = new URL(event.request.url);
-
-  // External requests cache නොකරන්න
-  if (url.origin !== location.origin) return;
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
 
-    (async () => {
+    caches.match(event.request).then(cachedResponse => {
 
-      const cache = await caches.open(CACHE_NAME);
+      const networkFetch = fetch(event.request)
+        .then(networkResponse => {
 
-      const cachedResponse =
-        await cache.match(event.request);
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            event.request.url.startsWith(self.location.origin)
+          ) {
 
-      const networkFetch =
-        fetch(event.request)
-          .then(response => {
+            const clone = networkResponse.clone();
 
-            if (
-              response &&
-              response.status === 200
-            ) {
+            caches.open(CACHE_NAME)
+              .then(cache => cache.put(event.request, clone));
+          }
 
-              cache.put(
-                event.request,
-                response.clone()
-              );
-            }
-
-            return response;
-
-          })
-          .catch(() => cachedResponse);
+          return networkResponse;
+        })
+        .catch(() => cachedResponse);
 
       return cachedResponse || networkFetch;
-
-    })()
-
+    })
   );
-
 });
