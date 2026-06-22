@@ -1,70 +1,120 @@
-const CACHE_NAME = ' buddhist-era-v17.1.5';
+const CACHE_NAME = 'buddhist-era-v17.1.6';
 
-const PRECACHE_FILES = [
-  './',
-  './index.html',
-  './manifest.json',
-  './astronomy.browser.min.js',
-  './icon-192x192.png',
-  './style.css',
-  './script.js'
+const CACHE_ASSETS = [
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/astronomy.browser.min.js',
+  '/icon-192x192.png'
 ];
 
-// Install
-self.addEventListener('install', event => {
+// INSTALL
+self.addEventListener('install', (event) => {
   self.skipWaiting();
 
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE_FILES))
+      .then((cache) => cache.addAll(CACHE_ASSETS))
   );
 });
 
-// Activate
-self.addEventListener('activate', event => {
-
+// ACTIVATE
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
+    caches.keys()
+      .then((keys) =>
+        Promise.all(
+          keys.map((key) => {
+            if (key !== CACHE_NAME) {
+              return caches.delete(key);
+            }
+          })
+        )
       )
-    )
+      .then(() => self.clients.claim())
   );
-
-  self.clients.claim();
 });
 
-// Fetch
-self.addEventListener('fetch', event => {
+// FETCH
+self.addEventListener('fetch', (event) => {
 
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
 
-  event.respondWith(
+  // Google Analytics requests ignore
+  if (
+    req.url.includes('googletagmanager.com') ||
+    req.url.includes('google-analytics.com')
+  ) {
+    return;
+  }
 
-    caches.match(event.request).then(cachedResponse => {
+  // GET requests only
+  if (req.method !== 'GET') {
+    return;
+  }
 
-      const networkFetch = fetch(event.request)
-        .then(networkResponse => {
+  // Navigation requests (pages)
+  if (req.mode === 'navigate') {
 
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            event.request.url.startsWith(self.location.origin)
-          ) {
+    event.respondWith(
+      fetch(req)
+        .then((networkResponse) => {
 
-            const clone = networkResponse.clone();
+          const responseClone = networkResponse.clone();
 
-            caches.open(CACHE_NAME)
-              .then(cache => cache.put(event.request, clone));
-          }
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(req, responseClone);
+            });
 
           return networkResponse;
         })
-        .catch(() => cachedResponse);
+        .catch(async () => {
 
-      return cachedResponse || networkFetch;
-    })
+          const cachedPage = await caches.match(req);
+          if (cachedPage) {
+            return cachedPage;
+          }
+
+          const cachedIndex =
+            await caches.match('/index.html') ||
+            await caches.match('/');
+
+          return cachedIndex;
+        })
+    );
+
+    return;
+  }
+
+  // Static assets (Cache First)
+  event.respondWith(
+    caches.match(req)
+      .then((cachedResponse) => {
+
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+
+        return fetch(req)
+          .then((networkResponse) => {
+
+            if (
+              networkResponse &&
+              networkResponse.status === 200
+            ) {
+
+              const responseClone = networkResponse.clone();
+
+              caches.open(CACHE_NAME)
+                .then((cache) => {
+                  cache.put(req, responseClone);
+                });
+            }
+
+            return networkResponse;
+          });
+      })
   );
+
 });
