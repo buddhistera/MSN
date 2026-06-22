@@ -4,8 +4,13 @@ const CACHE_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
+
+  '/style.css',
+  '/script.js',
   '/astronomy.browser.min.js',
-  '/icon-192x192.png'
+
+  '/icon-192x192.png',
+  '/icon-512x512.png'
 ];
 
 // INSTALL
