@@ -1315,7 +1315,6 @@ function resetToToday() {
 
 function updateMiniMoon(dateObj) {
     const miniMoonVisual = document.getElementById('miniMoonVisual');
-    const miniMoonContainer = document.getElementById('miniMoonContainer');
     
     if (!miniMoonVisual) return;
 
@@ -1328,24 +1327,22 @@ function updateMiniMoon(dateObj) {
             const fraction = illumInfo.phase_fraction;
 
             miniMoonVisual.innerHTML = ''; 
-            miniMoonVisual.style.backgroundColor = '#222';
-            
-            if (miniMoonContainer) {
-                miniMoonContainer.style.boxShadow = `0 0 ${fraction * 15}px rgba(253, 224, 71, ${fraction * 0.6})`;
-            }
-            
+
             if (fraction > 0.98) {
-                miniMoonVisual.style.backgroundColor = '#fde047'; 
+                miniMoonVisual.className = 'full-moon';
             } else if (fraction > 0.02) {
+                miniMoonVisual.className = 'phase-moon';
                 const isWaxing = phase <= 0.5;
                 const scale = Math.abs(1 - (fraction * 2));
                 const baseHemisphere = isWaxing ? 'right: 0;' : 'left: 0;';
-                const maskColor = fraction < 0.5 ? '#222' : '#fde047';
+                const maskColor = fraction < 0.5 ? '#000000' : '#fde047';
                 
                 miniMoonVisual.innerHTML = `
                     <div style="position: absolute; top: 0; ${baseHemisphere} width: 50%; height: 100%; background-color: #fde047;"></div>
                     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 50%; background-color: ${maskColor}; transform: scaleX(${scale});"></div>
                 `;
+            } else {
+                miniMoonVisual.className = 'new-moon';
             }
         }
     } catch (e) {
@@ -1355,6 +1352,9 @@ function updateMiniMoon(dateObj) {
 
 let isAstroUpdating = false;
 
+// =======================================================
+// 1. සිංහල සාම්ප්‍රදායික මාස සහ දින පෙන්වන ප්‍රධාන ශ්‍රිතය
+// =======================================================
 function updateSinhalaAstroDate() {
     if (isAstroUpdating) return;
 
@@ -1382,7 +1382,6 @@ function updateSinhalaAstroDate() {
         }
     }
 
-    
     if (tithiLabelElement && mainDateInput && mainDateInput.value) {
         const selectedDateObj = new Date(mainDateInput.value);
         
@@ -1394,7 +1393,6 @@ function updateSinhalaAstroDate() {
         }
 
         if (engMode) {
-            
             const dateOptions = { weekday: 'long', month: 'long', day: 'numeric' };
             const formattedDate = selectedDateObj.toLocaleDateString('en-US', dateOptions);
             
@@ -1404,8 +1402,14 @@ function updateSinhalaAstroDate() {
                 tithiLabelElement.innerText = formattedDate;
             }
         } else {
-            
-            const monthName = selectedDateObj.toLocaleDateString('si-LK', { month: 'long' });
+            // සාම්ප්‍රදායික ලිතේ ක්‍රමයට ජනවාරි සිට දෙසැම්බර් දක්වා චන්ද්‍ර මාස නම්
+            const traditionalMonths = [
+                "දුරුතු", "නවම්", "මැදින්", "බක්", "වෙසක්", "පොසොන්", 
+                "ඇසළ", "නිකිණි", "බිනර", "වප්", "ඉල්", "උඳුවප්"
+            ];
+
+            // selectedDateObj එකෙන් මාසයේ අංකය ලබාගෙන (0-11) නම ලබා ගැනීම
+            const monthName = traditionalMonths[selectedDateObj.getMonth()];
             
             let tithiFormatted = '';
             if (currentTithi && currentTithi !== '--') {
@@ -1420,6 +1424,7 @@ function updateSinhalaAstroDate() {
             const sinhalaDays = ["රවි දින", "සඳු දින", "කුජ දින", "බුධ දින", "ගුරු දින", "කිවි දින", "ශනි දින"];
             const sinhalaDayName = sinhalaDays[dayOfWeekIndex];
 
+            // වචන එකතු වන විට "දුරුතු මස..." හෝ "නවම් මස..." ලෙස සාමාන්‍ය ලිතේ ආකාරයටම දර්ශනය වේ
             if (tithiFormatted !== '') {
                 tithiLabelElement.innerText = `${monthName} මස ${tithiFormatted} ${sinhalaDayName}`;
             } else {
@@ -1427,22 +1432,98 @@ function updateSinhalaAstroDate() {
             }
         }
     }
+} // <--- මෙන්න මේ වසන Bracket එක ඔබේ පැරණි කේතයේ අඩු වී තිබුණි.
+
+// =======================================================
+// 2. ස්වයංක්‍රීය දින යාවත්කාලීන කිරීමේ පද්ධතිය (පැයෙන් පැයට)
+// =======================================================
+function setupAutoDateUpdater() {
+    const mainDateInput = document.getElementById('inputDate');
+    if (!mainDateInput) return; 
+
+    function getTodayDateString() {
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function checkAndUpdateDate() {
+        const currentDateString = getTodayDateString();
+
+        if (mainDateInput.value !== currentDateString) {
+            mainDateInput.value = currentDateString;
+            if (typeof updateSinhalaAstroDate === "function") {
+                updateSinhalaAstroDate();
+            }
+        }
+    }
+
+    // පිටුව මුලින්ම Load වන විට අද දිනය සෙට් කරයි
+    checkAndUpdateDate();
+
+    // සෑම පැයකටම වරක් පසුබිමෙන් පරීක්ෂා කරයි
+    setInterval(checkAndUpdateDate, 3600000); 
 }
 
-window.onclick = function(e) { 
+// පිටුව Load වී අවසන් වූ පසු Event Listeners සක්‍රීය කිරීම
+document.addEventListener("DOMContentLoaded", function() {
+    setupAutoDateUpdater();
+
+    // පරිශීලකයා විසින් Calendar එකෙන් දින මාරු කරන විට Update වීම
+    const mainDateInput = document.getElementById('inputDate');
+    if (mainDateInput) {
+        mainDateInput.addEventListener('change', function() {
+            if (typeof updateSinhalaAstroDate === "function") {
+                updateSinhalaAstroDate();
+            }
+        });
+    }
+});
+
+
+// Modal එක open කිරීමට
+function openModal() {
+    const modal = document.getElementById("infoModal");
+    if (modal) {
+        modal.style.display = "flex";
+    }
+}
+
+// Modal එක close කිරීමට
+function closeModal() {
+    const modal = document.getElementById("infoModal");
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+// සියලුම Pop-ups/Modals පිටතින් ක්ලික් කළ විට වැසීම සඳහා පොදු සහ ආරක්ෂිත Listener එකක්
+window.addEventListener('click', function(e) {
+    // infoModal එක වැසීම
+    const infoModal = document.getElementById("infoModal");
+    if (e.target == infoModal) {
+        infoModal.style.display = "none";
+    }
+    
+    // Dropdown එක වැසීම
     let myDropdown = document.getElementById("myDropdown");
     if (myDropdown && !e.target.matches('.menu-dots')) {
         myDropdown.style.display = "none";
     }
     
+    // පොදු modal class වැසීම
     if (e.target.classList.contains('modal')) {
         e.target.style.display = "none";
     }
     
+    // sunModal එක වැසීම
     if (e.target.id === 'sunModal') {
         e.target.style.display = "none";
     }
-};
+});
+
 
 if ('serviceWorker' in navigator) {
 
