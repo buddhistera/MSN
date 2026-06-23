@@ -1115,7 +1115,6 @@ function updateSunTimes() {
                 solarNoon = sn ? (sn.date || sn.time?.date || null) : null;
             }
 
-            // 🌙 [MOON RISE / SET FIX] 
             const mr = Astronomy.SearchRiseSet('Moon', observer, 1, astroStartOfDay, 1);
             moonTimes.rise = mr ? (mr.date || mr.time?.date || null) : null;
 
@@ -1352,9 +1351,6 @@ function updateMiniMoon(dateObj) {
 
 let isAstroUpdating = false;
 
-// =======================================================
-// 1. සිංහල සාම්ප්‍රදායික මාස සහ දින පෙන්වන ප්‍රධාන ශ්‍රිතය
-// =======================================================
 function updateSinhalaAstroDate() {
     if (isAstroUpdating) return;
 
@@ -1402,13 +1398,12 @@ function updateSinhalaAstroDate() {
                 tithiLabelElement.innerText = formattedDate;
             }
         } else {
-            // සාම්ප්‍රදායික ලිතේ ක්‍රමයට ජනවාරි සිට දෙසැම්බර් දක්වා චන්ද්‍ර මාස නම්
+            
             const traditionalMonths = [
                 "දුරුතු", "නවම්", "මැදින්", "බක්", "වෙසක්", "පොසොන්", 
                 "ඇසළ", "නිකිණි", "බිනර", "වප්", "ඉල්", "උඳුවප්"
             ];
 
-            // selectedDateObj එකෙන් මාසයේ අංකය ලබාගෙන (0-11) නම ලබා ගැනීම
             const monthName = traditionalMonths[selectedDateObj.getMonth()];
             
             let tithiFormatted = '';
@@ -1424,7 +1419,6 @@ function updateSinhalaAstroDate() {
             const sinhalaDays = ["රවි දින", "සඳු දින", "කුජ දින", "බුධ දින", "ගුරු දින", "කිවි දින", "ශනි දින"];
             const sinhalaDayName = sinhalaDays[dayOfWeekIndex];
 
-            // වචන එකතු වන විට "දුරුතු මස..." හෝ "නවම් මස..." ලෙස සාමාන්‍ය ලිතේ ආකාරයටම දර්ශනය වේ
             if (tithiFormatted !== '') {
                 tithiLabelElement.innerText = `${monthName} මස ${tithiFormatted} ${sinhalaDayName}`;
             } else {
@@ -1432,11 +1426,36 @@ function updateSinhalaAstroDate() {
             }
         }
     }
-} // <--- මෙන්න මේ වසන Bracket එක ඔබේ පැරණි කේතයේ අඩු වී තිබුණි.
+}
 
-// =======================================================
-// 2. ස්වයංක්‍රීය දින යාවත්කාලීන කිරීමේ පද්ධතිය (පැයෙන් පැයට)
-// =======================================================
+function openModal() {
+    const modal = document.getElementById("infoModal");
+    if (modal) {
+        modal.style.display = "flex";
+    }
+}
+
+function closeModal(modalId) {
+
+    const idToClose = modalId ? modalId : "infoModal";
+    const modal = document.getElementById(idToClose);
+    if (modal) {
+        modal.style.display = "none";
+    }
+}
+
+window.addEventListener('click', function(e) {
+
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = "none";
+    }
+
+    let myDropdown = document.getElementById("myDropdown");
+    if (myDropdown && !e.target.matches('.menu-dots')) {
+        myDropdown.style.display = "none";
+    }
+});
+
 function setupAutoDateUpdater() {
     const mainDateInput = document.getElementById('inputDate');
     if (!mainDateInput) return; 
@@ -1453,25 +1472,26 @@ function setupAutoDateUpdater() {
         const currentDateString = getTodayDateString();
 
         if (mainDateInput.value !== currentDateString) {
+
             mainDateInput.value = currentDateString;
-            if (typeof updateSinhalaAstroDate === "function") {
-                updateSinhalaAstroDate();
-            }
+            
+            const changeEvent = new Event('change', { bubbles: true });
+            mainDateInput.dispatchEvent(changeEvent);
         }
     }
 
-    // පිටුව මුලින්ම Load වන විට අද දිනය සෙට් කරයි
-    checkAndUpdateDate();
-
-    // සෑම පැයකටම වරක් පසුබිමෙන් පරීක්ෂා කරයි
     setInterval(checkAndUpdateDate, 3600000); 
+
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === "visible") {
+            checkAndUpdateDate();
+        }
+    });
 }
 
-// පිටුව Load වී අවසන් වූ පසු Event Listeners සක්‍රීය කිරීම
 document.addEventListener("DOMContentLoaded", function() {
     setupAutoDateUpdater();
 
-    // පරිශීලකයා විසින් Calendar එකෙන් දින මාරු කරන විට Update වීම
     const mainDateInput = document.getElementById('inputDate');
     if (mainDateInput) {
         mainDateInput.addEventListener('change', function() {
@@ -1479,48 +1499,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 updateSinhalaAstroDate();
             }
         });
-    }
-});
-
-
-// Modal එක open කිරීමට
-function openModal() {
-    const modal = document.getElementById("infoModal");
-    if (modal) {
-        modal.style.display = "flex";
-    }
-}
-
-// Modal එක close කිරීමට
-function closeModal() {
-    const modal = document.getElementById("infoModal");
-    if (modal) {
-        modal.style.display = "none";
-    }
-}
-
-// සියලුම Pop-ups/Modals පිටතින් ක්ලික් කළ විට වැසීම සඳහා පොදු සහ ආරක්ෂිත Listener එකක්
-window.addEventListener('click', function(e) {
-    // infoModal එක වැසීම
-    const infoModal = document.getElementById("infoModal");
-    if (e.target == infoModal) {
-        infoModal.style.display = "none";
-    }
-    
-    // Dropdown එක වැසීම
-    let myDropdown = document.getElementById("myDropdown");
-    if (myDropdown && !e.target.matches('.menu-dots')) {
-        myDropdown.style.display = "none";
-    }
-    
-    // පොදු modal class වැසීම
-    if (e.target.classList.contains('modal')) {
-        e.target.style.display = "none";
-    }
-    
-    // sunModal එක වැසීම
-    if (e.target.id === 'sunModal') {
-        e.target.style.display = "none";
     }
 });
 
