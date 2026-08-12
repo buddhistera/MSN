@@ -1,4 +1,4 @@
-const CACHE_NAME = 'buddhist-era-v17.1.8';
+const CACHE_NAME = 'buddhist-era-v17.2.0';
 
 const CACHE_ASSETS = [
   '/',
