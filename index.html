@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="si">
+<html lang="en">
 <head>
 	
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-ECEGZ86GGK"></script>
 <script src="astronomy.browser.min.js?v=1"></script>
-<script src="script.js?v=2.1"></script>
+<script src="script.js?"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -60,13 +60,26 @@
     </div>
     
     <div class="date-row">
-        <div class="custom-date-container">
-           <input type="date" id="inputDate" onchange="updateDisplay(); calculateAll(); updateSinhalaAstroDate();">
+        <div class="custom-date-container" onclick="openWheelPicker('inputDate')">
+           <input type="date" id="inputDate" readonly onfocus="this.blur()" onchange="updateDisplay(); calculateAll(); updateSinhalaAstroDate();">
             <span id="dateText"></span>
         </div>
         <div id="miniMoonContainer" onclick="resetToToday()">
             <div id="miniMoonVisual"></div>
         </div>
+    </div>
+</div>
+
+<div id="wheelPickerModal" class="modal-wheel">
+    <div class="wheel-picker-container">
+        <div class="wheel-picker-close" onclick="closeWheelPicker()">&times;</div>
+        <div class="wheel-columns">
+            <div class="wheel-col" id="wheelYear"></div>
+            <div class="wheel-col" id="wheelMonth"></div>
+            <div class="wheel-col" id="wheelDate"></div>
+            <div class="wheel-selection-band"></div>
+        </div>
+        <button class="wheel-ok-btn" onclick="confirmWheelPicker()" id="ui-wheel-ok">OK</button>
     </div>
 </div>
 
@@ -158,7 +171,9 @@
         <button class="sun-close-btn" onclick="closeSunModal()">&times;</button>
         
         <div class="sun-header-controls" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
-            <input type="date" id="sunDateInput" class="sun-input">
+            <div class="sun-date-wrap" onclick="openWheelPicker('sunDateInput')">
+                <input type="date" id="sunDateInput" class="sun-input" readonly onfocus="this.blur()">
+            </div>
             <button id="getLocationBtn" onclick="fetchLocationAndSunData()" style="padding: 8px 15px; font-size: 14px; background-color: #d4af37; color: #fff; border: none; border-radius: 5px; cursor: pointer;">
                 📍 Get My Location
             </button>
@@ -202,7 +217,7 @@
         <div id="moonVisual"></div>
     </div>
     <div class="moon-details">
-        <div id="moonPhaseLabel" class="moon-phase-title">පූරණය වේ...</div>
+        <div id="moonPhaseLabel" class="moon-phase-title">need 📍...</div>
         <div id="moonIllumLabel" class="moon-illumination">දීප්තිය: --%</div>
     </div>
 </div>
